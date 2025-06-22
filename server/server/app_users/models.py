@@ -1,9 +1,11 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, AbstractUser
+from django.core import validators
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from server.app_users.managers import AppUserManager
+from server.app_users.validators import first_name_validator, last_name_validator, phone_number_validator
 
 
 class AppUser(AbstractBaseUser, PermissionsMixin):
@@ -24,3 +26,65 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     objects = AppUserManager()
+
+
+class Profile(models.Model):
+    GENDER_CHOICES = [
+        ("Male", "Male"),
+        ("Female", "Female"),
+        ("Prefer not to say", "Prefer not to say")
+    ]
+
+    first_name = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        validators=[
+            validators.MinLengthValidator(2, message="First name needs to be at least 2 characters long."),
+            first_name_validator
+        ]
+    )
+
+    last_name = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        validators=[
+            validators.MinLengthValidator(2, message="Last name needs to be at least 2 characters long."),
+            last_name_validator
+        ]
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        validators=[
+            validators.MinLengthValidator(4, message="Gender needs to be at least 4 characters long.")
+        ]
+    )
+
+    phone_number = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        validators=[
+            validators.MinLengthValidator(10, "Phone number needs to beexactly 10 characters long."),
+            phone_number_validator
+        ]
+    )
+
+    bio = models.TextField(
+        max_length=800,
+        null=True,
+        blank=True,
+        validators=[
+            validators.MinLengthValidator(10, "Bio needs to be at least 10 characters long.")
+        ]
+    )
+
+    user = models.OneToOneField(
+        to=AppUser,
+        on_delete=models.CASCADE,
+        related_name="profile"
+    )
